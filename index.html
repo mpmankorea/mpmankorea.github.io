@@ -1,24 +1,120 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>기업은행 계좌 복사</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>계좌번호 복사</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; padding: 24px; text-align: center; }
+    .card { max-width: 560px; margin: 0 auto; padding: 24px; border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    .acc { font-size: 22px; font-weight: 700; letter-spacing: .3px; margin: 8px 0 16px; }
+    button { font-size: 16px; padding: 12px 18px; border-radius: 12px; border: 0; cursor: pointer; }
+    .primary { background: #111; color: #fff; }
+    .secondary { background: #f0f0f0; margin-top: 8px; }
+    .hint { color:#666; font-size: 13px; margin-top: 12px; line-height: 1.4; }
+    .inputWrap { margin-top: 14px; }
+    input[type="text"] { width: 100%; padding: 12px 14px; font-size: 18px; border: 1px solid #ccc; border-radius: 10px; }
+    .ok { color:#0a7a28; font-weight:600; margin-top: 10px; display:none; }
+    .fail { color:#b00020; font-weight:600; margin-top: 10px; display:none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div>기업은행 계좌번호</div>
+    <div id="acc" class="acc">기업은행 296-101344-04-018</div>
+
+    <button class="primary" id="copyBtn">📋 복사하기</button>
+    <button class="secondary" id="openBtn" style="display:none;">🌐 Safari/Chrome으로 열기</button>
+
+    <div id="ok" class="ok">복사되었습니다! 붙여넣기만 하세요.</div>
+    <div id="fail" class="fail">자동 복사가 차단되어 직접 복사해주세요.</div>
+
+    <div class="inputWrap">
+      <!-- 폴백: 길게 눌러 복사 가능 -->
+      <input id="manual" type="text" readonly value="기업은행 296-101344-04-018" />
+      <div class="hint">
+        일부 앱의 인앱 브라우저는 복사를 막습니다.<br/>
+        위 입력창을 길게 눌러 복사하거나, 아래 버튼으로 외부 브라우저에서 다시 열어주세요.
+      </div>
+    </div>
+  </div>
+
+  <textarea id="hidden" style="position:absolute; left:-9999px; top:-9999px;"></textarea>
+
   <script>
-    async function copyAccount() {
-      const text = "기업은행 296-101344-04-018";
+    const text = "기업은행 296-101344-04-018";
+    const copyBtn = document.getElementById("copyBtn");
+    const ok = document.getElementById("ok");
+    const fail = document.getElementById("fail");
+    const hidden = document.getElementById("hidden");
+    const openBtn = document.getElementById("openBtn");
+
+    // 인앱 브라우저(카카오/인스타/페북 등) 감지(간단판)
+    const ua = navigator.userAgent.toLowerCase();
+    const inApp =
+      ua.includes("kakaotalk") ||
+      ua.includes("line") ||
+      ua.includes("instagram") ||
+      ua.includes("fb_iab") ||
+      ua.includes("naver");
+
+    if (inApp) {
+      openBtn.style.display = "inline-block";
+      openBtn.onclick = () => {
+        // 외부 브라우저 권장: 사용자가 직접 "브라우저에서 열기"를 눌러야 완전히 빠져나옵니다.
+        // 새 탭 열기(일부 인앱에선 동일 웹뷰이지만 안내용으로 제공)
+        window.open(location.href, "_blank");
+        alert("인앱 브라우저에선 복사가 제한될 수 있어요.\n아래 '브라우저에서 열기' 버튼을 눌러 외부 브라우저에서 열어주세요.");
+      };
+    }
+
+    async function copyUsingClipboardAPI() {
+      await navigator.clipboard.writeText(text);
+    }
+
+    function copyUsingExecCommand() {
+      hidden.value = text;
+      hidden.select();
+      hidden.setSelectionRange(0, text.length);
+      const ok = document.execCommand("copy");
+      hidden.blur();
+      return ok;
+    }
+
+    async function copy() {
+      ok.style.display = "none";
+      fail.style.display = "none";
+
       try {
-        await navigator.clipboard.writeText(text);
-        alert("계좌번호가 복사되었습니다!\n\n" + text);
-      } catch (err) {
-        alert("복사 실패 😢 직접 복사해주세요.\n\n" + text);
+        // 1) 최신 API (클릭 이벤트 내에서 시도)
+        if (navigator.clipboard && window.isSecureContext) {
+          await copyUsingClipboardAPI();
+          ok.style.display = "block";
+          return;
+        }
+        // 2) 폴백
+        const res = copyUsingExecCommand();
+        if (res) {
+          ok.style.display = "block";
+        } else {
+          fail.style.display = "block";
+        }
+      } catch (e) {
+        // 3) 최종 실패
+        try {
+          const res = copyUsingExecCommand();
+          if (res) { ok.style.display = "block"; return; }
+        } catch (_) {}
+        fail.style.display = "block";
       }
     }
+
+    copyBtn.addEventListener("click", copy);
+    // 입력창 탭 시 전체 선택 (길게 눌러 복사 쉽게)
+    document.getElementById("manual").addEventListener("focus", function() {
+      this.select();
+      this.setSelectionRange(0, this.value.length);
+    });
   </script>
-</head>
-<body style="text-align:center; font-family:sans-serif; margin-top:100px;">
-  <h2>기업은행 296-101344-04-018</h2>
-  <button onclick="copyAccount()" style="padding:10px 20px; font-size:16px; border-radius:10px;">
-    📋 계좌번호 복사하기
-  </button>
 </body>
 </html>
