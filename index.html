@@ -4,19 +4,21 @@
   <meta charset="UTF-8">
   <title>기업은행 계좌 복사</title>
   <script>
-    document.addEventListener("DOMContentLoaded", async () => {
+    async function copyAccount() {
       const text = "기업은행 296-101344-04-018";
       try {
         await navigator.clipboard.writeText(text);
-        alert("계좌번호가 자동으로 복사되었습니다!\n\n" + text);
+        alert("계좌번호가 복사되었습니다!\n\n" + text);
       } catch (err) {
-        alert("자동 복사 실패 😢 직접 복사해주세요.\n\n" + text);
+        alert("복사 실패 😢 직접 복사해주세요.\n\n" + text);
       }
-    });
+    }
   </script>
 </head>
-<body style="text-align:center; font-family:sans-serif;">
+<body style="text-align:center; font-family:sans-serif; margin-top:100px;">
   <h2>기업은행 296-101344-04-018</h2>
-  <p>계좌번호가 자동으로 복사되었습니다.</p>
+  <button onclick="copyAccount()" style="padding:10px 20px; font-size:16px; border-radius:10px;">
+    📋 계좌번호 복사하기
+  </button>
 </body>
 </html>
